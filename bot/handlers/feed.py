@@ -72,26 +72,13 @@ async def show_next_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ---------- Отправка анкеты с фото ----------
     from bot.models.photo import Photo
     main_photo = db_session.query(Photo).filter_by(profile_id=profile.id, is_main=True).first()
-    if main_photo:
+    if main_photo and main_photo.s3_key:
         from bot.services.s3_service import S3Service
-        if main_photo.s3_key:
-            s3 = S3Service()
-            photo_url = s3.get_photo_url(main_photo.s3_key)
-            await update.message.reply_photo(
-                photo=photo_url,
-                caption=text,
-                reply_markup=reply_markup
-            )
-        elif main_photo.file_id:
-            await update.message.reply_photo(
-                photo=main_photo.file_id,
-                caption=text,
-                reply_markup=reply_markup
-            )
-        else:
-            await update.message.reply_text(text, reply_markup=reply_markup)
+        s3 = S3Service()
+        photo_url = s3.get_photo_url(main_photo.s3_key)
+        await update.message.reply_photo(photo=photo_url, caption=text, parse_mode='HTML')
     else:
-        await update.message.reply_text(text, reply_markup=reply_markup)
+        await update.message.reply_text(text, parse_mode='HTML')
 
 async def feed_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать следующую анкету (обработчик команды /feed и кнопки)"""

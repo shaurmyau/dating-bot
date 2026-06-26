@@ -52,8 +52,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dating_bot}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     networks:
       - dating_net
 
@@ -61,8 +61,8 @@ services:
     image: redis:6-alpine
     container_name: redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
     networks:
       - dating_net
 
@@ -114,7 +114,9 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - grafana_data:/var/lib/grafana
+    - ./grafana/provisioning:/etc/grafana/provisioning   # provisioning
+    - ./grafana/dashboards:/etc/grafana/dashboards       # дашборды
+    - grafana_data:/var/lib/grafana                      # данные
     ports:
       - "3000:3000"
     depends_on:

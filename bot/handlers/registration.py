@@ -169,21 +169,12 @@ async def ask_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return ASK_PHOTO
     
     photo = update.message.photo[-1]
-    
-    # 1. Скачиваем файл из Telegram
     file = await context.bot.get_file(photo.file_id)
     file_bytes = await file.download_as_bytearray()
-    
-    # 2. Загружаем в S3
     from bot.services.s3_service import S3Service
     s3 = S3Service()
-    # определяем расширение (по умолчанию jpg)
     s3_key = s3.upload_photo(bytes(file_bytes), 'jpg')
-    
-    # 3. Сохраняем s3_key в user_data (временно)
     context.user_data['s3_key'] = s3_key
-    # также сохраняем file_id на случай, если S3 недоступен
-    context.user_data['photo_file_id'] = photo.file_id
     
     await update.message.reply_text(
         "Фото сохранено! 📸\n\n"

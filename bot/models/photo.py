@@ -8,8 +8,7 @@ class Photo(Base):
     
     id = Column(Integer, primary_key=True)
     profile_id = Column(Integer, ForeignKey('profiles.id', ondelete='CASCADE'), nullable=False)
-    file_id = Column(String(256), nullable=True)
-    s3_key = Column(String(512), nullable=True)
+    s3_key = Column(String(512), nullable=False)
     order_index = Column(Integer, default=0)
     is_main = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())

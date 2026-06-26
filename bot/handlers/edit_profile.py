@@ -244,17 +244,10 @@ async def process_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     s3 = S3Service()
     s3_key = s3.upload_photo(bytes(file_bytes), 'jpg')
     
-    # Удаляем все старые фото пользователя
+    # Удаляем старые фото
     db_session.query(Photo).filter_by(profile_id=profile.id).delete()
-    
     # Сохраняем новое фото
-    new_photo = Photo(
-        profile_id=profile.id,
-        s3_key=s3_key,
-        file_id=photo.file_id,
-        order_index=0,
-        is_main=True
-    )
+    new_photo = Photo(profile_id=profile.id, s3_key=s3_key, order_index=0, is_main=True)
     db_session.add(new_photo)
     db_session.commit()
     

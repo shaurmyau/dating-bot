@@ -1,0 +1,44 @@
+{
+  "title": "Dating Bot Dashboard",
+  "uid": "dating-bot",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Активные пользователи",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [
+        {"expr": "active_users", "format": "time_series"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Всего лайков",
+      "type": "stat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "targets": [
+        {"expr": "total_likes", "format": "time_series"}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Всего мэтчей",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "targets": [
+        {"expr": "total_matches", "format": "time_series"}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Время ответа API (feed_show)",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 4, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket{handler='feed_show'}[5m])) by (le))", "format": "time_series", "legendFormat": "P95 feed_show"}
+      ]
+    }
+  ],
+  "schemaVersion": 27,
+  "time": {"from": "now-6h", "to": "now"}
+}
