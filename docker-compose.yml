@@ -1,0 +1,132 @@
+services:
+  bot:
+    build: .
+    container_name: dating_bot
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - prometheus
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    networks:
+      - dating_net
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    restart: unless-stopped
+    command: celery -A celery_app worker --loglevel=info
+    depends_on:
+      - redis
+      - postgres
+      - minio
+    env_file:
+      - .env
+    networks:
+      - dating_net
+
+  celery_beat:
+    build: .
+    container_name: celery_beat
+    restart: unless-stopped
+    command: celery -A celery_app beat --loglevel=info
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - .env
+    networks:
+      - dating_net
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dating_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-dating_bot}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - dating_net
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - dating_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    networks:
+      - dating_net
+
+  minio-init:
+    image: minio/mc:latest 
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin; do sleep 1; done;
+      /usr/bin/mc mb myminio/dating-photos;
+      /usr/bin/mc policy set public myminio/dating-photos;
+      exit 0;
+      "
+    networks:
+      - dating_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - dating_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - dating_net
+
+volumes:
+  postgres_data:
+  minio_data:
+  grafana_data:
+
+networks:
+  dating_net:
+    driver: bridge

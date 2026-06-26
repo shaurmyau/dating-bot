@@ -1,0 +1,1 @@
+find . -name "*.py" -not -path "./.venv/*" -print0 | while IFS= read -r -d '' file; do echo "$file"; cat "$file"; echo "==================================="; done > all_code_formatted.txt
